@@ -1,0 +1,36 @@
+name: DHD
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        required: true
+        description: Which repo to dust
+
+jobs:
+  gen_mat:
+    runs-on: ubuntu-latest
+    outputs: 
+      assignments: ${{ steps.assign.outputs.assignments }}
+    steps:
+      - id: assign
+        run: |
+          sudo apt update
+          sudo apt install skopeo
+          echo "::set-output name=assignments::$(skopeo inspect docker://${{ github.event.inputs.repository }} | jq  '[.RepoTags | _nwise(100) | tostring] | tostring')"
+      
+  pull:
+    runs-on: ubuntu-latest
+    needs: gen_mat
+    strategy:
+      matrix:
+        tags: ${{ fromJSON(needs.gen_mat.outputs.assignments) }}
+    env:
+      TAGS: ${{ matrix.tags }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - run: |
+          for tag in $(echo "${TAGS}" | jq -r '.[]'); do
+            docker pull "${{github.event.inputs.repository }}:$tag"
+          done

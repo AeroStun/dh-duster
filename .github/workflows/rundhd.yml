@@ -16,7 +16,7 @@ jobs:
     steps:
       - id: assign
         run: |
-          echo "::set-output name=assignments::$(skopeo inspect docker://${{ github.event.inputs.repository }} | jq  '[.RepoTags | _nwise(100) | tostring]')"
+          echo "::set-output name=assignments::$(skopeo inspect docker://${{ github.event.inputs.repository }} | jq -c '[.RepoTags | _nwise(100) | tostring]')"
       
   pull:
     runs-on: ubuntu-latest

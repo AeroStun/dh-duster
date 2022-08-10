@@ -29,6 +29,11 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - run: |
+          n="$(echo "${TAGS}" | jq length)"
+          i=0
           for tag in $(echo "${TAGS}" | jq -r '.[]'); do
+            ((++i))
+            echo "Processing ${i}/${n}"
             docker pull "${{github.event.inputs.repository }}:$tag"
+            docker rmi -f "${{github.event.inputs.repository }}:$tag"
           done
